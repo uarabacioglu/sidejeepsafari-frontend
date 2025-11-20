@@ -651,9 +651,21 @@ if (error || !tour) {
 		let currentAdults = parseInt(adultMin) || 1;
 		let currentChildren = 0;
 
+		function formatDate(date) {
+			const y = date.getFullYear();
+			const m = String(date.getMonth() + 1).padStart(2, "0");
+			const d = String(date.getDate()).padStart(2, "0");
+			return `${y}-${m}-${d}`;
+		}
+
 		// Calculate available dates from all periods
 		function getAvailableDates() {
 			const dates = [];
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			const earliest = new Date(today);
+			earliest.setDate(today.getDate() + 1);
+
 			activePeriods.forEach(function (period) {
 				if (period.start_date && period.end_date) {
 					const start = new Date(period.start_date);
@@ -680,9 +692,13 @@ if (error || !tour) {
 								return day.name === dayName;
 							})
 						) {
-							const dateStr = d.toISOString().split("T")[0];
-							if (!dates.includes(dateStr)) {
-								dates.push(dateStr);
+							const current = new Date(d);
+							current.setHours(0, 0, 0, 0);
+							if (current >= earliest) {
+								const dateStr = formatDate(current);
+								if (!dates.includes(dateStr)) {
+									dates.push(dateStr);
+								}
 							}
 						}
 					}
@@ -838,16 +854,21 @@ if (error || !tour) {
 			}
 
 			const availableDates = getAvailableDates();
+			const defaultDate =
+				availableDates.length > 0 ? availableDates[0] : null;
 			const flatpickrInstance = fp(tourDateInput, {
 				mode: "single",
 				dateFormat: "Y-m-d",
 				minDate:
-					availableDates.length > 0 ? availableDates[0] : "today",
+					availableDates.length > 0
+						? availableDates[0]
+						: new Date().fp_incr(1),
 				maxDate:
 					availableDates.length > 0
 						? availableDates[availableDates.length - 1]
 						: null,
 				enable: availableDates,
+				defaultDate: defaultDate || undefined,
 				onChange: function (selectedDates, dateStr) {
 					if (dateStr) {
 						selectedPeriod = findPeriodForDate(dateStr);
@@ -867,6 +888,18 @@ if (error || !tour) {
 						priceDisplay.classList.add("hidden");
 					}
 					validateForm();
+				},
+				onReady: function (_, dateStr) {
+					const initialDate = dateStr || defaultDate;
+					if (initialDate) {
+						selectedPeriod = findPeriodForDate(initialDate);
+						if (selectedPeriod) {
+							periodIdInput.value = selectedPeriod.period_id;
+							updatePickupTimes(selectedPeriod);
+							calculatePrice();
+							validateForm();
+						}
+					}
 				},
 			});
 
