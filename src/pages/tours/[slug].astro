@@ -36,6 +36,7 @@ if (error || !tour) {
 <Layout title={`${tour.title} - Side Jeep Safari`}>
 	<Fragment slot="head">
 		<link
+			id="flatpickr-theme-link"
 			rel="stylesheet"
 			href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
 		/>
@@ -646,6 +647,7 @@ if (error || !tour) {
 		const priceBreakdown = document.getElementById("price-breakdown");
 		const submitBtn = document.getElementById("submit-btn");
 		const bookingForm = document.getElementById("booking-form");
+		const themeLink = document.getElementById("flatpickr-theme-link");
 
 		let selectedPeriod = null;
 		let currentAdults = parseInt(adultMin) || 1;
@@ -930,6 +932,24 @@ if (error || !tour) {
 			calculatePrice();
 			validateForm();
 		}
+
+		// Keep flatpickr theme in sync with Tailwind dark mode
+		function applyFlatpickrTheme() {
+			if (!themeLink) return;
+			const isDark = document.documentElement.classList.contains("dark");
+			const lightHref =
+				"https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css";
+			const darkHref =
+				"https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css";
+			themeLink.href = isDark ? darkHref : lightHref;
+		}
+
+		applyFlatpickrTheme();
+		const themeObserver = new MutationObserver(applyFlatpickrTheme);
+		themeObserver.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["class"],
+		});
 
 		adultsDecreaseBtn.addEventListener("click", function () {
 			updateAdults(currentAdults - 1);
