@@ -1,0 +1,1016 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import ImageSlider from "../../components/ImageSlider.astro";
+const apiBase = import.meta.env.PUBLIC_API_URL;
+
+const { slug } = Astro.params;
+
+if (!slug) {
+	return Astro.redirect("/tours");
+}
+
+let tour = null;
+let error = null;
+
+try {
+	const response = await fetch(`${apiBase}tours/${slug}/`);
+	if (response.ok) {
+		tour = await response.json();
+	} else if (response.status === 404) {
+		error = "Tour not found";
+	} else {
+		error = "Failed to load tour";
+	}
+} catch (err) {
+	error = "Failed to fetch tour data";
+}
+
+if (error || !tour) {
+	return Astro.redirect("/tours");
+}
+---
+
+<Layout title={`${tour.title} - Side Jeep Safari`}>
+	<Fragment slot="head">
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+		/>
+		<script src="https://cdn.jsdelivr.net/npm/flatpickr" defer></script>
+	</Fragment>
+	<Header
+		title={tour.title}
+		subtitle={tour.short_description}
+		backgroundImage={tour.thumbnail?.image}
+	/>
+
+	<div class="container mx-auto px-4 py-8 md:py-12">
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+			<!-- Main Content -->
+			<div class="lg:col-span-2 space-y-8">
+				<!-- Image Slider -->
+				{
+					tour.images && tour.images.length > 0 && (
+						<ImageSlider images={tour.images} title={tour.title} />
+					)
+				}
+
+				<!-- Full Description -->
+				<section>
+					<h2
+						class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4"
+					>
+						About This Tour
+					</h2>
+					<div
+						class="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 whitespace-pre-line"
+					>
+						{tour.full_description}
+					</div>
+				</section>
+
+				<!-- Highlights -->
+				{
+					tour.highlights && tour.highlights.length > 0 && (
+						<section>
+							<h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+								Highlights
+							</h2>
+							<ul class="space-y-3">
+								{tour.highlights.map((highlight: string) => (
+									<li class="flex items-start space-x-3">
+										<svg
+											class="w-6 h-6 text-orange-500 dark:text-orange-400 mt-0.5 flex-shrink-0"
+											fill="none"
+											stroke="currentColor"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M5 13l4 4L19 7"
+											/>
+										</svg>
+										<span class="text-gray-700 dark:text-gray-300">
+											{highlight}
+										</span>
+									</li>
+								))}
+							</ul>
+						</section>
+					)
+				}
+
+				<!-- Included & Excluded -->
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					{
+						tour.included && tour.included.length > 0 && (
+							<section>
+								<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
+									What's Included
+								</h3>
+								<ul class="space-y-2">
+									{tour.included.map((item: string) => (
+										<li class="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
+											<svg
+												class="w-5 h-5 text-green-500"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M5 13l4 4L19 7"
+												/>
+											</svg>
+											<span>{item}</span>
+										</li>
+									))}
+								</ul>
+							</section>
+						)
+					}
+
+					{
+						tour.excluded && tour.excluded.length > 0 && (
+							<section>
+								<h3 class="text-xl font-bold text-gray-900 dark:text-white mb-3">
+									What's Excluded
+								</h3>
+								<ul class="space-y-2">
+									{tour.excluded.map((item: string) => (
+										<li class="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
+											<svg
+												class="w-5 h-5 text-red-500"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M6 18L18 6M6 6l12 12"
+												/>
+											</svg>
+											<span>{item}</span>
+										</li>
+									))}
+								</ul>
+							</section>
+						)
+					}
+				</div>
+
+				<!-- What to Know -->
+				{
+					tour.what_to_know && tour.what_to_know.length > 0 && (
+						<section>
+							<h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+								Important Information
+							</h2>
+							<ul class="space-y-2 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 dark:border-yellow-600 p-4 rounded">
+								{tour.what_to_know.map((info: string) => (
+									<li class="text-gray-700 dark:text-gray-300 flex items-start">
+										<span class="mr-2">•</span>
+										<span>{info}</span>
+									</li>
+								))}
+							</ul>
+						</section>
+					)
+				}
+
+				<!-- What to Bring -->
+				{
+					tour.what_to_bring && tour.what_to_bring.length > 0 && (
+						<section>
+							<h2 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+								What to Bring
+							</h2>
+							<div class="flex flex-wrap gap-2">
+								{tour.what_to_bring.map((item: string) => (
+									<span class="px-4 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full text-sm font-medium">
+										{item}
+									</span>
+								))}
+							</div>
+						</section>
+					)
+				}
+			</div>
+
+			<!-- Sidebar -->
+			<aside class="lg:col-span-1">
+				<div class="sticky top-24 space-y-6">
+					<!-- Tour Info Card -->
+					<div
+						class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+					>
+						<div class="space-y-4">
+							<div>
+								<div class="flex items-center space-x-2 mb-2">
+									<svg
+										class="w-5 h-5 text-orange-500"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+										></path>
+									</svg>
+									<span
+										class="font-semibold text-gray-900 dark:text-white"
+									>
+										Duration
+									</span>
+								</div>
+								<p class="text-gray-600 dark:text-gray-400">
+									{tour.duration}
+								</p>
+							</div>
+
+							<div>
+								<div class="flex items-center space-x-2 mb-2">
+									<svg
+										class="w-5 h-5 text-orange-500"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+										></path>
+									</svg>
+									<span
+										class="font-semibold text-gray-900 dark:text-white"
+									>
+										Participants
+									</span>
+								</div>
+								<p class="text-gray-600 dark:text-gray-400">
+									{tour.min_participant_for_a_booking} -{" "}
+									{tour.max_participants_for_a_booking} people
+								</p>
+							</div>
+
+							<div>
+								<div class="flex items-center space-x-2 mb-2">
+									<svg
+										class="w-5 h-5 text-orange-500"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M5 13l4 4L19 7"></path>
+									</svg>
+									<span
+										class="font-semibold text-gray-900 dark:text-white"
+									>
+										Rating
+									</span>
+								</div>
+								<div class="flex items-center space-x-2">
+									<svg
+										class="w-5 h-5 text-yellow-400"
+										fill="currentColor"
+										viewBox="0 0 20 20"
+									>
+										<path
+											d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+										></path>
+									</svg>
+									<span
+										class="text-gray-900 dark:text-white font-semibold"
+									>
+										{
+											parseFloat(
+												tour.review_rate,
+											).toFixed(1)
+										}
+									</span>
+									<span
+										class="text-gray-500 dark:text-gray-400 text-sm"
+									>
+										({tour.review_count} reviews)
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Booking Form -->
+					<div
+						class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700"
+					>
+						<h3
+							class="text-xl font-bold text-gray-900 dark:text-white mb-4"
+						>
+							Book This Tour
+						</h3>
+						<form id="booking-form" class="space-y-4">
+							<!-- Tour Date -->
+							<div>
+								<label
+									for="tour_date"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Tour Date <span class="text-red-500">*</span
+									>
+								</label>
+								<input
+									type="text"
+									id="tour_date"
+									name="tour_date"
+									required
+									readonly
+									placeholder="Select a date"
+									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500 cursor-pointer"
+								/>
+								<input
+									type="hidden"
+									id="period_id"
+									name="period_id"
+								/>
+							</div>
+
+							<!-- Pickup Time -->
+							<div>
+								<label
+									for="pick_up_time"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Pickup Time <span class="text-red-500"
+										>*</span
+									>
+								</label>
+								<select
+									id="pick_up_time"
+									name="pick_up_time"
+									required
+									disabled
+									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+								>
+									<option value=""
+										>Select date first...</option
+									>
+								</select>
+							</div>
+
+							<!-- Participants -->
+							<div>
+								<label
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Participants <span class="text-red-500"
+										>*</span
+									>
+								</label>
+								<div class="grid grid-cols-2 gap-4">
+									<!-- Adults -->
+									<div>
+										<label
+											for="adults"
+											class="block text-xs text-gray-600 dark:text-gray-400 mb-1"
+										>
+											Adults ({tour.adult_age_start}-{
+												tour.adult_age_end
+											} years)
+										</label>
+										<div
+											class="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden"
+										>
+											<button
+												type="button"
+												id="adults-decrease"
+												class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+												aria-label="Decrease adults"
+											>
+												−
+											</button>
+											<input
+												type="number"
+												id="adults"
+												name="adults"
+												value={tour.adult_min_participant}
+												min={tour.adult_min_participant}
+												max={tour.adult_max_participant}
+												required
+												readonly
+												class="w-full px-4 py-2 text-center bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-0 focus:ring-0"
+											/>
+											<button
+												type="button"
+												id="adults-increase"
+												class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+												aria-label="Increase adults"
+											>
+												+
+											</button>
+										</div>
+									</div>
+									<!-- Children -->
+									<div>
+										<label
+											for="children"
+											class="block text-xs text-gray-600 dark:text-gray-400 mb-1"
+										>
+											Children ({tour.child_age_start}-{
+												tour.child_age_end
+											} years)
+										</label>
+										<div
+											class="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden"
+										>
+											<button
+												type="button"
+												id="children-decrease"
+												class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+												aria-label="Decrease children"
+											>
+												−
+											</button>
+											<input
+												type="number"
+												id="children"
+												name="children"
+												value="0"
+												min="0"
+												max={tour.child_max_participant}
+												required
+												readonly
+												class="w-full px-4 py-2 text-center bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-0 focus:ring-0"
+											/>
+											<button
+												type="button"
+												id="children-increase"
+												class="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+												aria-label="Increase children"
+											>
+												+
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Price Display -->
+							<div
+								id="price-display"
+								class="hidden p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg"
+							>
+								<div class="flex justify-between items-center">
+									<span
+										class="text-sm font-medium text-gray-700 dark:text-gray-300"
+									>
+										Total Price:
+									</span>
+									<span
+										id="total-price"
+										class="text-2xl font-bold text-orange-600 dark:text-orange-400"
+									>
+										€0
+									</span>
+								</div>
+								<div
+									id="price-breakdown"
+									class="mt-2 text-xs text-gray-600 dark:text-gray-400"
+								>
+								</div>
+							</div>
+
+							<!-- Full Name -->
+							<div>
+								<label
+									for="full_name"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Full Name <span class="text-red-500">*</span
+									>
+								</label>
+								<input
+									type="text"
+									id="full_name"
+									name="full_name"
+									required
+									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+								/>
+							</div>
+
+							<!-- Email -->
+							<div>
+								<label
+									for="email"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Email <span class="text-red-500">*</span>
+								</label>
+								<input
+									type="email"
+									id="email"
+									name="email"
+									required
+									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+								/>
+							</div>
+
+							<!-- Phone -->
+							<div>
+								<label
+									for="phone"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Phone <span class="text-red-500">*</span>
+								</label>
+								<input
+									type="text"
+									id="phone"
+									name="phone"
+									required
+									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+								/>
+							</div>
+
+							<!-- Hotel Name -->
+							<div>
+								<label
+									for="hotel_name"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Hotel Name <span class="text-red-500"
+										>*</span
+									>
+								</label>
+								<input
+									type="text"
+									id="hotel_name"
+									name="hotel_name"
+									required
+									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+								/>
+							</div>
+
+							<!-- Message (Optional) -->
+							<div>
+								<label
+									for="message"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+								>
+									Message (Optional)
+								</label>
+								<textarea
+									id="message"
+									name="message"
+									rows="3"
+									class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+								></textarea>
+							</div>
+
+							<button
+								type="submit"
+								id="submit-btn"
+								disabled
+								class="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors"
+							>
+								Book Now
+							</button>
+						</form>
+					</div>
+
+					<!-- Pickup Info -->
+					{
+						tour.pickup_description && (
+							<div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+								<h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+									Pickup Information
+								</h4>
+								<p class="text-sm text-blue-800 dark:text-blue-200">
+									{tour.pickup_description}
+								</p>
+							</div>
+						)
+					}
+				</div>
+			</aside>
+		</div>
+	</div>
+</Layout>
+
+<script
+	define:vars={{
+		periods: JSON.stringify(tour.periods || []),
+		tourSlug: slug,
+		adultMin: tour.adult_min_participant,
+		adultMax: tour.adult_max_participant,
+		childMax: tour.child_max_participant,
+	}}
+>
+	(function () {
+		// Parse periods data
+		const periodsData = JSON.parse(periods || "[]");
+		const activePeriods = periodsData.filter(function (p) {
+			return p.is_active;
+		});
+
+		// Get form elements
+		const tourDateInput = document.getElementById("tour_date");
+		const periodIdInput = document.getElementById("period_id");
+		const pickupTimeSelect = document.getElementById("pick_up_time");
+		const adultsInput = document.getElementById("adults");
+		const childrenInput = document.getElementById("children");
+		const adultsDecreaseBtn = document.getElementById("adults-decrease");
+		const adultsIncreaseBtn = document.getElementById("adults-increase");
+		const childrenDecreaseBtn =
+			document.getElementById("children-decrease");
+		const childrenIncreaseBtn =
+			document.getElementById("children-increase");
+		const priceDisplay = document.getElementById("price-display");
+		const totalPriceSpan = document.getElementById("total-price");
+		const priceBreakdown = document.getElementById("price-breakdown");
+		const submitBtn = document.getElementById("submit-btn");
+		const bookingForm = document.getElementById("booking-form");
+
+		let selectedPeriod = null;
+		let currentAdults = parseInt(adultMin) || 1;
+		let currentChildren = 0;
+
+		// Calculate available dates from all periods
+		function getAvailableDates() {
+			const dates = [];
+			activePeriods.forEach(function (period) {
+				if (period.start_date && period.end_date) {
+					const start = new Date(period.start_date);
+					const end = new Date(period.end_date);
+					for (
+						let d = new Date(start);
+						d <= end;
+						d.setDate(d.getDate() + 1)
+					) {
+						// Check if date is enabled for this period
+						const dayOfWeek = d.getDay();
+						const dayName = [
+							"SUN",
+							"MON",
+							"TUE",
+							"WED",
+							"THU",
+							"FRI",
+							"SAT",
+						][dayOfWeek];
+						if (
+							period.enabled_days &&
+							period.enabled_days.some(function (day) {
+								return day.name === dayName;
+							})
+						) {
+							const dateStr = d.toISOString().split("T")[0];
+							if (!dates.includes(dateStr)) {
+								dates.push(dateStr);
+							}
+						}
+					}
+				}
+			});
+			return dates.sort();
+		}
+
+		// Find period for selected date
+		function findPeriodForDate(dateStr) {
+			const selectedDate = new Date(dateStr);
+			const dayOfWeek = selectedDate.getDay();
+			const dayName = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][
+				dayOfWeek
+			];
+
+			return activePeriods.find(function (period) {
+				if (!period.start_date || !period.end_date) return false;
+				const start = new Date(period.start_date);
+				const end = new Date(period.end_date);
+				const isInRange = selectedDate >= start && selectedDate <= end;
+				const isDayEnabled =
+					period.enabled_days &&
+					period.enabled_days.some(function (day) {
+						return day.name === dayName;
+					});
+				return isInRange && isDayEnabled;
+			});
+		}
+
+		// Update pickup times
+		function updatePickupTimes(period) {
+			pickupTimeSelect.innerHTML =
+				'<option value="">Select pickup time...</option>';
+			if (
+				period &&
+				period.pickup_times &&
+				period.pickup_times.length > 0
+			) {
+				pickupTimeSelect.disabled = false;
+				pickupTimeSelect.classList.remove(
+					"bg-gray-100",
+					"dark:bg-gray-900",
+					"text-gray-500",
+					"dark:text-gray-400",
+					"cursor-not-allowed",
+				);
+				pickupTimeSelect.classList.add(
+					"bg-white",
+					"dark:bg-gray-700",
+					"text-gray-900",
+					"dark:text-white",
+				);
+				period.pickup_times.forEach(function (time) {
+					const option = document.createElement("option");
+					option.value = time;
+					option.textContent = time;
+					pickupTimeSelect.appendChild(option);
+				});
+
+				// Auto-select if only one pickup time, or pre-select first if multiple
+				if (period.pickup_times.length === 1) {
+					pickupTimeSelect.value = period.pickup_times[0];
+					pickupTimeSelect.disabled = true; // Disable since there's only one option
+					pickupTimeSelect.classList.add(
+						"bg-gray-50",
+						"dark:bg-gray-800",
+					);
+				} else if (period.pickup_times.length > 1) {
+					// Pre-select the first pickup time
+					pickupTimeSelect.value = period.pickup_times[0];
+				}
+
+				// Trigger validation after selection
+				validateForm();
+			} else {
+				pickupTimeSelect.disabled = true;
+				pickupTimeSelect.classList.add(
+					"bg-gray-100",
+					"dark:bg-gray-900",
+					"text-gray-500",
+					"dark:text-gray-400",
+					"cursor-not-allowed",
+				);
+				pickupTimeSelect.classList.remove(
+					"bg-white",
+					"dark:bg-gray-700",
+					"text-gray-900",
+					"dark:text-white",
+				);
+			}
+		}
+
+		// Calculate and display price
+		function calculatePrice() {
+			if (!selectedPeriod) {
+				priceDisplay.classList.add("hidden");
+				return;
+			}
+
+			const adultPrice = parseFloat(selectedPeriod.adult_price) || 0;
+			const childPrice = parseFloat(selectedPeriod.child_price) || 0;
+			const discountRate = selectedPeriod.discount_rate
+				? parseFloat(selectedPeriod.discount_rate)
+				: 0;
+
+			let total =
+				adultPrice * currentAdults + childPrice * currentChildren;
+
+			if (discountRate > 0) {
+				total = (total * (100 - discountRate)) / 100;
+			}
+
+			totalPriceSpan.textContent = "€" + Math.round(total);
+
+			let breakdown = "";
+			if (currentAdults > 0) {
+				breakdown += `${currentAdults} Adult${currentAdults > 1 ? "s" : ""} × €${adultPrice} = €${(adultPrice * currentAdults).toFixed(2)}`;
+			}
+			if (currentChildren > 0) {
+				if (breakdown) breakdown += "<br>";
+				breakdown += `${currentChildren} Child${currentChildren > 1 ? "ren" : ""} × €${childPrice} = €${(childPrice * currentChildren).toFixed(2)}`;
+			}
+			if (discountRate > 0) {
+				if (breakdown) breakdown += "<br>";
+				breakdown += `Discount ${discountRate}% applied`;
+			}
+			priceBreakdown.innerHTML = breakdown;
+			priceDisplay.classList.remove("hidden");
+		}
+
+		// Validate form
+		function validateForm() {
+			const hasDate = tourDateInput.value && selectedPeriod;
+			const hasTime = pickupTimeSelect.value;
+			const hasName = document.getElementById("full_name").value.trim();
+			const hasEmail = document.getElementById("email").value.trim();
+			const hasHotel = document.getElementById("hotel_name").value.trim();
+			const isValid =
+				hasDate && hasTime && hasName && hasEmail && hasHotel;
+			submitBtn.disabled = !isValid;
+			return isValid;
+		}
+
+		// Initialize Flatpickr - wait for it to load
+		function initFlatpickr() {
+			const fp =
+				window.flatpickr ||
+				(typeof flatpickr !== "undefined" ? flatpickr : null);
+			if (!fp) {
+				setTimeout(initFlatpickr, 50);
+				return;
+			}
+
+			const availableDates = getAvailableDates();
+			const flatpickrInstance = fp(tourDateInput, {
+				mode: "single",
+				dateFormat: "Y-m-d",
+				minDate:
+					availableDates.length > 0 ? availableDates[0] : "today",
+				maxDate:
+					availableDates.length > 0
+						? availableDates[availableDates.length - 1]
+						: null,
+				enable: availableDates,
+				onChange: function (selectedDates, dateStr) {
+					if (dateStr) {
+						selectedPeriod = findPeriodForDate(dateStr);
+						if (selectedPeriod) {
+							periodIdInput.value = selectedPeriod.period_id;
+							updatePickupTimes(selectedPeriod);
+							calculatePrice();
+						} else {
+							periodIdInput.value = "";
+							updatePickupTimes(null);
+							priceDisplay.classList.add("hidden");
+						}
+					} else {
+						selectedPeriod = null;
+						periodIdInput.value = "";
+						updatePickupTimes(null);
+						priceDisplay.classList.add("hidden");
+					}
+					validateForm();
+				},
+			});
+
+			// Store instance for form reset
+			window.flatpickrInstance = flatpickrInstance;
+		}
+
+		// Participant controls (work independently of flatpickr)
+		function updateAdults(value) {
+			const newValue = Math.max(
+				parseInt(adultMin),
+				Math.min(parseInt(adultMax), value),
+			);
+			currentAdults = newValue;
+			adultsInput.value = newValue;
+			adultsDecreaseBtn.disabled = newValue <= parseInt(adultMin);
+			adultsIncreaseBtn.disabled = newValue >= parseInt(adultMax);
+			calculatePrice();
+			validateForm();
+		}
+
+		function updateChildren(value) {
+			const newValue = Math.max(0, Math.min(parseInt(childMax), value));
+			currentChildren = newValue;
+			childrenInput.value = newValue;
+			childrenDecreaseBtn.disabled = newValue <= 0;
+			childrenIncreaseBtn.disabled = newValue >= parseInt(childMax);
+			calculatePrice();
+			validateForm();
+		}
+
+		adultsDecreaseBtn.addEventListener("click", function () {
+			updateAdults(currentAdults - 1);
+		});
+
+		adultsIncreaseBtn.addEventListener("click", function () {
+			updateAdults(currentAdults + 1);
+		});
+
+		childrenDecreaseBtn.addEventListener("click", function () {
+			updateChildren(currentChildren - 1);
+		});
+
+		childrenIncreaseBtn.addEventListener("click", function () {
+			updateChildren(currentChildren + 1);
+		});
+
+		// Initialize participant buttons
+		updateAdults(currentAdults);
+		updateChildren(currentChildren);
+
+		// Form field validation
+		document
+			.getElementById("full_name")
+			.addEventListener("input", validateForm);
+		document
+			.getElementById("email")
+			.addEventListener("input", validateForm);
+		document
+			.getElementById("hotel_name")
+			.addEventListener("input", validateForm);
+		pickupTimeSelect.addEventListener("change", validateForm);
+
+		// Wait for DOM and flatpickr to be ready
+		if (document.readyState === "loading") {
+			document.addEventListener("DOMContentLoaded", function () {
+				setTimeout(initFlatpickr, 100);
+			});
+		} else {
+			setTimeout(initFlatpickr, 100);
+		}
+
+		// Handle form submission
+		if (bookingForm) {
+			bookingForm.addEventListener("submit", async function (e) {
+				e.preventDefault();
+
+				if (!validateForm()) {
+					alert("Please fill in all required fields.");
+					return;
+				}
+
+				const formData = {
+					period_id: periodIdInput.value,
+					tour_date: tourDateInput.value,
+					pick_up_time: pickupTimeSelect.value,
+					full_name: document
+						.getElementById("full_name")
+						.value.trim(),
+					email: document.getElementById("email").value.trim(),
+					phone: document.getElementById("phone").value.trim(),
+					adults: currentAdults,
+					children: currentChildren,
+					hotel_name: document
+						.getElementById("hotel_name")
+						.value.trim(),
+					message:
+						document.getElementById("message").value.trim() || "",
+					selected_curreny: "EUR",
+				};
+
+				submitBtn.disabled = true;
+				submitBtn.textContent = "Booking...";
+
+				try {
+					const response = await fetch(
+						`http://127.0.0.1:8000/api/tours/${tourSlug}/book/`,
+						{
+							method: "POST",
+							headers: {
+								"Content-Type": "application/json",
+							},
+							body: JSON.stringify(formData),
+						},
+					);
+
+					const data = await response.json();
+
+					if (response.ok) {
+						alert(
+							"Booking successful! Booking ID: " +
+								data.booking_id,
+						);
+						bookingForm.reset();
+						if (window.flatpickrInstance) {
+							window.flatpickrInstance.clear();
+						}
+						selectedPeriod = null;
+						updatePickupTimes(null);
+						priceDisplay.classList.add("hidden");
+						updateAdults(parseInt(adultMin));
+						updateChildren(0);
+					} else {
+						alert(
+							"Booking failed: " +
+								(data.detail || "Unknown error"),
+						);
+					}
+				} catch (error) {
+					alert("Error submitting booking: " + error.message);
+				} finally {
+					submitBtn.disabled = false;
+					submitBtn.textContent = "Book Now";
+					validateForm();
+				}
+			});
+		}
+	})();
+</script>

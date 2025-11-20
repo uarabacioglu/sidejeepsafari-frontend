@@ -1,0 +1,27 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Header.astro";
+import TourListing from "../components/TourListing.astro";
+
+const apiBase = import.meta.env.PUBLIC_API_URL;
+
+let tours = [];
+
+try {
+	const response = await fetch(`${apiBase}tours/`);
+	if (response.ok) {
+		tours = await response.json();
+	}
+} catch (error) {
+	console.error("Failed to fetch tours:", error);
+	tours = [];
+}
+---
+
+<Layout>
+	<Header
+		title="Welcome to Side Jeep Safari"
+		subtitle="Experience the adventure of a lifetime through breathtaking landscapes"
+	/>
+	<TourListing tours={tours} />
+</Layout>
