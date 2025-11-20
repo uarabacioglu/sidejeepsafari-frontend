@@ -2,7 +2,9 @@
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/Header.astro";
 import ImageSlider from "../../components/ImageSlider.astro";
-const apiBase = import.meta.env.PUBLIC_API_URL;
+
+// const apiBase = import.meta.env.PUBLIC_API_URL;
+const apiBase = "https://seventours.eu.pythonanywhere.com/api/";
 
 const { slug } = Astro.params;
 
